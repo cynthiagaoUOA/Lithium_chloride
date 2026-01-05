@@ -7,7 +7,6 @@ library(ggplot2)
 # install.packages("remotes")
 # remotes::install_github("JamesHucklesby/vascr")
 
-#setwd to folder where data files are saved to > onedrive > phd> 2503 li ecis
 
 # loading in data ---------------------------------------------------------
 #rep1 
