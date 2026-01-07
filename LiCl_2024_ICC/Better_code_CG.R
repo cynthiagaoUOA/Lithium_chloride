@@ -14,11 +14,10 @@ library(patchwork)
 library(gglm)
 
 
-setwd("E:/Cynthia")
+#Since honours, I have since put code and data onto uni laptop, under C disk/ gitfolder/ LiCl/ LiCl2024
+# functions are in this script
+source("vjunctur_functions_v1.R")
 
-
-#functions in other script
-source("E:\\Cynthia\\vjunctur_functions_v1.R")
 
 
 # wellmaps ----------------------------------------------------------------
@@ -179,12 +178,12 @@ Exp4_wellplate = tribble(~well, ~ch_dapi, ~ch_actin, ~ch_antibody, ~name_antibod
 
 
 # importing data ----------------------------------------------------------
-Exp2_T4 = import_operetta("E:\\Cynthia\\Cynthia[12001]\\T4_2_9[28151]\\2024-09-02T163134+1200[32251]\\2024-09-02T163134+1200[32251]", 
+Exp2_T4 = import_operetta("Cynthia[12001]\\T4_2_9[28151]\\2024-09-02T163134+1200[32251]\\2024-09-02T163134+1200[32251]", 
                           Exp2_wellplate)
 Exp2_T4$experiment = "Exp2"
 Exp2_T4$timepoint = "T4"
 
-Exp2_T12 = import_operetta("E:\\Cynthia\\Cynthia[12001]\\T12_2_9[28152]\\2024-09-02T155017+1200[32252]\\2024-09-02T155017+1200[32252]",
+Exp2_T12 = import_operetta("Cynthia[12001]\\T12_2_9[28152]\\2024-09-02T155017+1200[32252]\\2024-09-02T155017+1200[32252]",
                            Exp2_wellplate)
 Exp2_T12$experiment= "Exp2"
 Exp2_T12$timepoint= "T12"
@@ -193,13 +192,13 @@ Exp2_T4_and_T12<- rbind(Exp2_T4, Exp2_T12)
 
 
 # Exp3 separate and combined times
-Exp3_T4 = import_operetta("E:\\Cynthia\\Cynthia[12001]\\T4_11_9[28354]\\2024-09-11T135358+1200[32454]\\2024-09-11T135358+1200[32454]", 
+Exp3_T4 = import_operetta("Cynthia[12001]\\T4_11_9[28354]\\2024-09-11T135358+1200[32454]\\2024-09-11T135358+1200[32454]", 
                           Exp3_wellplate)
 Exp3_T4$experiment = "Exp3"
 Exp3_T4$timepoint= "T4"
 
 
-Exp3_T12 = import_operetta("E:\\Cynthia\\Cynthia[12001]\\T12_11_9[28352]\\2024-09-11T130008+1200[32452]\\2024-09-11T130008+1200[32452]", 
+Exp3_T12 = import_operetta("Cynthia[12001]\\T12_11_9[28352]\\2024-09-11T130008+1200[32452]\\2024-09-11T130008+1200[32452]", 
                            Exp3_wellplate)
 Exp3_T12$experiment = "Exp3"
 Exp3_T12$timepoint= "T12"
@@ -207,12 +206,12 @@ Exp3_T12$timepoint= "T12"
 Exp3_T4_and_T12 <- rbind(Exp3_T4, Exp3_T12)
 
 # Exp 4
-Exp4_T4 = import_operetta("E:\\Cynthia\\Cynthia[12001]\\T4_21_9[28553]\\2024-09-21T153009+1200[32653]\\2024-09-21T153009+1200[32653]",
+Exp4_T4 = import_operetta("Cynthia[12001]\\T4_21_9[28553]\\2024-09-21T153009+1200[32653]\\2024-09-21T153009+1200[32653]",
                           Exp4_wellplate)
 Exp4_T4$experiment = "Exp4"
 Exp4_T4$timepoint= "T4"
 
-Exp4_T12 = import_operetta("E:\\Cynthia\\Cynthia[12001]\\T12_21_9[28552]\\2024-09-21T162642+1200[32652]\\2024-09-21T162642+1200[32652]",
+Exp4_T12 = import_operetta("Cynthia[12001]\\T12_21_9[28552]\\2024-09-21T162642+1200[32652]\\2024-09-21T162642+1200[32652]",
                           Exp4_wellplate)
 Exp4_T12$experiment = "Exp4"
 Exp4_T12$timepoint= "T12"
@@ -425,7 +424,7 @@ plot_bar(all_VE_summarised, "mean_cont_area", "se_cont_area", all_VE_norm_points
 plot_bar(all_VE_summarised, "mean_cont_fluoro", "se_cont_fluoro", all_VE_norm_points, "norm_cont_fluoro")
 
 view(all_VE_summarised)
-view(all_bcat_summarised)
+
 
 # b-cat -------------------------------------------------------------------
 Exp2_bcat = Exp2_T4_and_T12 %>% # Exp 2
@@ -750,3 +749,4 @@ plot_bar_adjusted_lots<- function(all_summarised, y_axis, se_y_variable, all_nor
     )+ ylim(0,2) + 
     labs(x="", y= "", color="Replicate number")
 }
+
