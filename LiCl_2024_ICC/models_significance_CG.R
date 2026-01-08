@@ -119,3 +119,48 @@ significance(quant_Exp2_bcat, quant_Exp3_bcat, quant_Exp4_bcat, "T12", "nuclear_
 
 significance(quant_Exp2_bcat, quant_Exp3_bcat, quant_Exp4_bcat, "T4", "contiguous_fluorescence")
 significance(quant_Exp2_bcat, quant_Exp3_bcat, quant_Exp4_bcat, "T12", "contiguous_fluorescence")
+
+
+
+# Checking against JH anova  ----------------------------------------------
+
+#In theory both analysis types will produce the same outcomes, but want to check as better to simplify methods for paper
+
+# have to re-break down this code as i don't remember what I did
+significance <- function (replicate1, replicate2, replicate3, timepoint, variable){
+  combine_data <- rbind(replicate1, replicate2, replicate3) %>% filter(timepoint==!!timepoint)
+  combine_data$sample <- as.factor(combine_data$sample)
+  
+  formula_str <- paste(variable, "~ sample + (1|experiment)") 
+  model <- lmer(as.formula(formula_str), data = combine_data)
+  em<- emmeans(model, specs = "sample")
+  
+  return(pairs(em, adjust = "tukey"))
+  
+  significance(quant_Exp2_ve_cad, quant_Exp3_ve_cad, quant_Exp4_ve_cad, "T4", "contiguous_area")
+  
+# taking the function and doing it manual so I can see what's going on and replicate
+test<-rbind(quant_Exp2_ve_cad, quant_Exp3_ve_cad, quant_Exp4_ve_cad) %>% filter (timepoint=="T4")
+test$sample<- as.factor(test$sample)
+
+testmodel<- lmer(contiguous_area ~ sample + (1|experiment), data = test)
+testem<- emmeans(testmodel, specs= "sample")
+
+pairs(testem, adjust = "tukey")
+
+
+
+# doing linear model, returning tukeys pairs p values
+
+# now the way that JH did for vascr
+
+lmtest<-lm(contiguous_area ~ sample + experiment, data = test)
+  
+  
+# install.packages("rstatix")
+library(rstatix)
+
+  tukey_hsd(lmtest)
+  
+# tested one timepoint and the significance lines up. So now I am pretty confident that my results will be the same as if I had used ANOVA. Happy to use in paper
+
