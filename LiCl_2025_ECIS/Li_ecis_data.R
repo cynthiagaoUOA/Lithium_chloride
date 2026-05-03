@@ -9,7 +9,6 @@ library(ggplot2)
 
 
 # loading in data ---------------------------------------------------------
-#rep1 
 exp1<- vascr_import("ECIS", #importing raw data and modeled data
                     raw="ECIS_250310_MFT_1_CG_exp1.abp",
                     model="ECIS_250310_MFT_1_CG_exp1_RbA.csv", experiment="EXP1")
@@ -123,7 +122,15 @@ all_plot_data <- all_data %>%
   vascr_normalise(-2, divide = TRUE) %>% # normalizing to 2hr before treatment. normalization by division rather than subtraction
   vascr_subset(time = c(-5,20)) #limiting the range of hours that is shown on graph
 
-# Plots -------------------------------------------------------------------
+# Rb Plots -------------------------------------------------------------------
+
+#creating master data for plotting - normalised resampled combined raw data
+all_plot_data <- all_data %>% 
+  vascr_subset(unit = "Rb") %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
+  vascr_resample_time(500) %>% 
+  vascr_normalise(-2, divide = TRUE) %>% # normalizing to 2hr before treatment. normalization by division rather than subtraction
+  vascr_subset(time = c(-5,20)) #limiting the range of hours that is shown on graph
+
 #all twelve core treatments shown on one graph
 all_plot_data %>% 
   vascr_subset(sampleid = c(1:12)) %>%
@@ -163,8 +170,9 @@ all_plot_data %>%
 
 
 
+
 # extra licl from august --------------------------------------------------
-## only 640nM data
+## only 640nM data, paper
 
 exp5<- vascr_import("ECIS", #importing raw data and modeled data
                     raw="ECIS_250818_MFT_1_CG_liclextra.abp",
@@ -192,11 +200,10 @@ plot_data_5 = exp5_labeled %>% vascr_zero_time(71.3)
 datawextra<- vascr_combine(plot_data_1,plot_data_2, plot_data_3, plot_data_4, plot_data_5) #combined raw data
 
 
-plotextra <- datawextra %>% 
-  vascr_subset(unit = "Rb") %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
+plotextra <- datawextra  %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
   vascr_resample_time(500) %>% 
   vascr_normalise(-2, divide = TRUE) %>% # normalizing to 2hr before treatment. normalization by division rather than subtraction
-  vascr_subset(time = c(-5,20)) 
+  vascr_subset(time = c(-5,20), unit= c("Rb", "Alpha", "Cm", "R"))  
 
 plotextra %>% 
   vascr_subset(time = c(-2,16), sampleid = c(1,4,7,12)) %>% vascr_summarise(level = "summary") %>%
@@ -212,8 +219,10 @@ plotextra %>%
     "640 nM Plasmin + 10mM LiCl" = "#64864A", 
     "640 nM Plasmin" = "#FF0000",  
     "640 nM Plasmin + 1mM LiCl" = "#FFAF11"
-  ))+theme_bw()
+  ))+theme_bw() +facet_wrap(~Unit)
 
+
+resis<- plotextra %>%  vascr_subset(unit="R")
 
 ### Stats stuff --------------------------------------------------------------------
 
@@ -223,7 +232,7 @@ plotextra %>%
 stats_data<- all_data %>% 
   vascr_subset(unit = "Rb") %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
   vascr_resample_time(500) %>% 
-  vascr_subset(time = c(-5,20), sampleid=c(1,3)) 
+  vascr_subset(time = c(-5,20), sampleid=c(1:12)) #
 
 
 stats_data %>% vascr_plot_anova(unit = "Rb", frequency = "0", time = 4)
@@ -241,3 +250,33 @@ statsdatatest %>% vascr_plot_anova(unit = "Rb", frequency = "0", time = 4)
 #
 
 #samples and sampleID too many
+
+
+li_stats_data<- all_data %>% 
+  vascr_subset(unit = "Rb") %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
+  vascr_resample_time(500) %>% 
+  vascr_subset(sampleid=c(1:12),time=c(-4,30)) 
+
+
+li_stats_data %>% # vascr_subset(sampleid=c(100, 17)) %>% 
+  vascr:::vascr_plot_line_dunnett (unit = "Rb", frequency = "0", time = list(4,12), reference = "vehicle", normtime=-2) +xlim(-4,20)
+
+
+#stats is on unnorm data but plot shows norm
+
+#do I need to correct for multiple comparisons
+
+
+stats_data$Experiment <- factor(stats_data$Experiment)
+stats_data$Sample   <- factor(stats_data$Sample)
+
+
+# vascrline dunnet shows normalised lines, but performs the statistical analysis on the unnormlised data. Looks cleaner and is valid
+stats_data %>%  vascr_subset(sampleid=c(100, 17)) %>% vascr:::vascr_plot_line_dunnett (unit = "Rb", frequency = "0", time = list(4,24,20), reference = "vehicle", normtime=-2) +
+  xlim(-4,40) +ylim(-1,0.5)
+
+
+sig_dunnett<- stats_data %>%  vascr_subset(sampleid=c(1:103)) %>% vascr_dunnett (unit = "Rb", frequency = "0", time = list(4,24,20), reference = "vehicle") 
+
+
+sig_dunnett %>% filter(Label!="ns") %>%  filter(Label!="+")

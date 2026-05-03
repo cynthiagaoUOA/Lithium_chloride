@@ -56,10 +56,85 @@ tophat = function(keyimage, area = 50)
   return(k2)
 }
 
+
+
+# import operetta ---------------------------------------------------------
+
+
 # file_path = "E:\\Cynthia\\Stack test\\Cynthia[12001]\\water_plasmin_25_9[28601]\\2024-09-25T142749+1200[32701]\\2024-09-25T142749+1200[32701]"
-# Operetta image import ---------------------------------------------------
+
+# operetta basename of files looks like -> 002002-1-001001001, where 1-3 are row, then column, then channel, then plane, 
 
 import_operetta = function(file_path, lookup = NULL)
+{
+  
+  filelist = list.files(file_path, full.names = TRUE, pattern = ".tif") #grabbing all the tif files as a list, which contains the full path to the file
+  file_directory = data.frame(path = filelist) #making the list into a dataframe called 'file_directory'
+  
+  # Grab the metadata from the file and split it out
+  file_directory$file = basename(file_path_sans_ext(file_directory$path)) #makes a new column called file, which is the basename (image file names excluding the whole folder path)
+  
+  file_directory$well = paste(LETTERS[as.numeric(substr(file_directory$file,1,3))], substr(file_directory$file,5,6), sep = "")
+  # Makes  a well column using info from filename
+  # extracts the first three numbers, (ie. positions 1 to 3) in file name, and turns it into a corresponding letter (eg 1=A), so that row indication is in letter form, then paste the column number (not bothering with the 0 in 002, as will only have double digit column numbers). So 002003 becomes B03
+  file_directory$field = substr(file_directory$file,8,8) %>% as.numeric()
+  # makes a field column, which extracts the number of the eigth position of the file name
+  file_directory$channel = paste("CH_",substr(file_directory$file,16,18) %>% as.numeric(), sep = "")
+  # makes a channel column, which takes the last three numbers of file name, and write "CH_" in front of that number with no spaces in between
+  
+  
+  file_directory$plane = substr(file_directory$file,13,15) %>% as.numeric()
+  # makes a plane column which extracts the letters in the 13 to 15th number position. 
+  
+  
+  file_directory$file = NULL #don't need the file column anymore as we've separated it all out into individual columns. NULL deletes this column
+  
+  file_directory = as.tibble(file_directory) #as a tibble
+  
+  if(is.null(lookup)) # If no plate map is provided, this function is complete and will spit out the dissected table. Otherwise, see below
+  {
+    return(file_directory)
+  }
+  
+  
+  #QC
+  # file_directory
+  # unique(file_directory$well)
+  
+  file_directory = file_directory %>% pivot_wider(names_from = channel, values_from = path) 
+  
+  # Attach the lockup table data
+  file_directory = right_join(file_directory, lookup, by = "well")
+  
+  
+  # Move the colnames where they need to be
+  file_directory = file_directory %>%
+    mutate(ch_dapi = case_when(ch_dapi == 1 ~ CH_1,
+                               ch_dapi == 2 ~ CH_2,
+                               ch_dapi == 3 ~ CH_3,
+                               ch_dapi == 4 ~ CH_4)) %>%
+    mutate(ch_actin = case_when(ch_actin == 1 ~ CH_1,
+                                ch_actin == 2 ~ CH_2,
+                                ch_actin == 3 ~ CH_3,
+                                ch_actin == 4 ~ CH_4)) %>%
+    mutate(ch_antibody = case_when(ch_antibody == 1 ~ CH_1,
+                                   ch_antibody == 2 ~ CH_2,
+                                   ch_antibody == 3 ~ CH_3,
+                                   ch_antibody == 4 ~ CH_4)) %>%
+    select(-CH_1, -CH_2, -CH_3, -CH_4)
+  
+  return(file_directory)
+  
+}
+
+
+
+# JI NIkon image import ---------------------------------------------------
+
+# The only thing that needs to be adjusted is the position of the metadata in the filename
+# The code below works for my stuff, where the file names are in the following format 01_C09_0002.nd2, which contains data for all channels within it. Maybe need to convert nd2 into a format where each channel is a separate file?
+
+import_JI = function(file_path, lookup = NULL)
 {
 
   # Grab the file list
@@ -69,16 +144,15 @@ import_operetta = function(file_path, lookup = NULL)
   # Grab the metadata from the file and split it out
   file_directory$file = basename(file_path_sans_ext(file_directory$path))
 
-  file_directory = file_directory %>% separate_wider_delim(file, delim = "-", names = c("well_id", "field", "meta"))
+  file_directory = file_directory$basename %>% separate_wider_delim(file, delim = "_", names = c("number", "well_id", "field"))
+  #separating out columns using the innate _ separator
 
-  file_directory$well = paste(LETTERS[as.numeric(substr(file_directory$well_id,0,3))], substr(file_directory$well_id,5,6), sep = "")
 
+ # file_directory$time = substr(file_directory$meta,0,3)
+# file_directory$plane = substr(file_directory$meta,4,6)
+#  file_directory$channel = substr(file_directory$meta,7,9)
 
-  file_directory$time = substr(file_directory$meta,0,3)
-  file_directory$plane = substr(file_directory$meta,4,6)
-  file_directory$channel = substr(file_directory$meta,7,9)
-
-  file_directory$meta = NULL
+  # file_directory$meta = NULL
 
 
   file_directory = as.tibble(file_directory)
