@@ -139,8 +139,8 @@ all_plot_data %>%
 
 #640pl plasmin w Li
 all_plot_data %>% # version with rep1
-  vascr_subset(sampleid = c(12,7,4,1)) %>% vascr_summarise(level = "summary") %>%
-  vascr_plot_line()  +scale_y_continuous(limits = c(0.5,1.25), expand = c(0, 0))
+  vascr_subset(sampleid = c(12,7,4,1)) %>% vascr_summarise(level = "experiment") %>%
+  vascr_plot_line()  +scale_y_continuous(limits = c(0.5,1.25), expand = c(0, 0)) +facet_wrap(~Experiment)
 
 all_plot_data %>% # version excluding iffy rep1
   vascr_subset(experiment=c(2,3,4),sampleid = c(12,7,4,1)) %>%
@@ -196,87 +196,53 @@ exp5_labeled<- vascr:::vascr_apply_map(exp5, exp5_key)
 plot_data_5 = exp5_labeled %>% vascr_zero_time(71.3) 
 
 
-
+# KEY DATASET
 datawextra<- vascr_combine(plot_data_1,plot_data_2, plot_data_3, plot_data_4, plot_data_5) #combined raw data
 
 
-plotextra <- datawextra  %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
+# initial go
+# plotextra <- datawextra  %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
+#  vascr_resample_time(500) %>% 
+#  vascr_normalise(-2, divide = TRUE) %>% # normalizing to 2hr before treatment. normalization by division rather than subtraction
+#  vascr_subset(time = c(-5,20), unit= c("Rb", "Alpha", "Cm", "R"))
+               
+
+
+
+
+
+
+#think R is taking lots of frequnecies, but if putting the vascr subset with the rest it cuts out the other units as well. Needs to be done separately. 
+resis<- datawextra %>%  
   vascr_resample_time(500) %>% 
   vascr_normalise(-2, divide = TRUE) %>% # normalizing to 2hr before treatment. normalization by division rather than subtraction
-  vascr_subset(time = c(-5,20), unit= c("Rb", "Alpha", "Cm", "R"))  
+  vascr_subset(time = c(-5,20), unit= c("R"), frequency = "4000") %>% 
+  mutate(Unit= recode(Unit, R = "Overall Resistance at 4000Hz"))
+
+units<- datawextra %>%  
+  vascr_resample_time(500) %>% 
+  vascr_normalise(-2, divide = TRUE) %>% # normalizing to 2hr before treatment. normalization by division rather than subtraction
+  vascr_subset(time = c(-5,20), unit= c("Rb", "Alpha", "Cm")) %>% 
+  mutate(Unit= recode(Unit, Rb = "Cell-to-Cell Adhesion (Rb)", Cm= "Membrane Capacitance (Cm)", Alpha="Basolateral Adhesion (alpha)"))
+
+plotextra<- vascr_combine(resis, units)
 
 plotextra %>% 
-  vascr_subset(time = c(-2,16), sampleid = c(1,4,7,12)) %>% vascr_summarise(level = "summary") %>%
+  vascr_subset(time = c(-2,24), sampleid = c(12, 7, 4, 1)) %>% vascr_summarise(level = "summary") %>%
   vascr_plot_line() +scale_y_continuous(limits = c(0.4,1.25), expand = c(0, 0))+
   scale_color_manual(values = c(
-    "vehicle" = "#438FFF", 
-    "640 nM Plasmin + 10mM LiCl" = "#64864A", 
+    "vehicle" = "#00A9FF", 
+    "640 nM Plasmin + 10mM LiCl" = "#0CB702", 
     "640 nM Plasmin" = "#FF0000", 
-    "640 nM Plasmin + 1mM LiCl" = "#FFBF6D"  
+    "640 nM Plasmin + 1mM LiCl" = "#E68613"  
   ))+
   scale_fill_manual(values = c(
-    "vehicle" = "skyblue3", 
-    "640 nM Plasmin + 10mM LiCl" = "#64864A", 
+    "vehicle" = "#00B8E7", 
+    "640 nM Plasmin + 10mM LiCl" = "#00BE67", 
     "640 nM Plasmin" = "#FF0000",  
-    "640 nM Plasmin + 1mM LiCl" = "#FFAF11"
-  ))+theme_bw() +facet_wrap(~Unit)
+    "640 nM Plasmin + 1mM LiCl" = "#CD9600" 
+  ))+theme_bw() +
+  geom_vline(xintercept=0, colour="azure4", linetype="dashed")+
+  facet_wrap(~Unit) + ylab("Fold change")
 
 
-resis<- plotextra %>%  vascr_subset(unit="R")
-
-### Stats stuff --------------------------------------------------------------------
-
-
-#all plot data is subset Rb, resample time, time normalised, and subsetted (between -4 and 20 hours)
-
-stats_data<- all_data %>% 
-  vascr_subset(unit = "Rb") %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
-  vascr_resample_time(500) %>% 
-  vascr_subset(time = c(-5,20), sampleid=c(1:12)) #
-
-
-stats_data %>% vascr_plot_anova(unit = "Rb", frequency = "0", time = 4)
-
-?vascr_plot_anova
-
-
-statsdatatest<- datawextra %>% 
-  vascr_subset(unit = "Rb") %>% 
-  vascr_resample_time(500) %>% 
-  vascr_subset(sampleid=c(1,4,7,12), time = c(-5,20))
-
-
-statsdatatest %>% vascr_plot_anova(unit = "Rb", frequency = "0", time = 4)
-#
-
-#samples and sampleID too many
-
-
-li_stats_data<- all_data %>% 
-  vascr_subset(unit = "Rb") %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
-  vascr_resample_time(500) %>% 
-  vascr_subset(sampleid=c(1:12),time=c(-4,30)) 
-
-
-li_stats_data %>% # vascr_subset(sampleid=c(100, 17)) %>% 
-  vascr:::vascr_plot_line_dunnett (unit = "Rb", frequency = "0", time = list(4,12), reference = "vehicle", normtime=-2) +xlim(-4,20)
-
-
-#stats is on unnorm data but plot shows norm
-
-#do I need to correct for multiple comparisons
-
-
-stats_data$Experiment <- factor(stats_data$Experiment)
-stats_data$Sample   <- factor(stats_data$Sample)
-
-
-# vascrline dunnet shows normalised lines, but performs the statistical analysis on the unnormlised data. Looks cleaner and is valid
-stats_data %>%  vascr_subset(sampleid=c(100, 17)) %>% vascr:::vascr_plot_line_dunnett (unit = "Rb", frequency = "0", time = list(4,24,20), reference = "vehicle", normtime=-2) +
-  xlim(-4,40) +ylim(-1,0.5)
-
-
-sig_dunnett<- stats_data %>%  vascr_subset(sampleid=c(1:103)) %>% vascr_dunnett (unit = "Rb", frequency = "0", time = list(4,24,20), reference = "vehicle") 
-
-
-sig_dunnett %>% filter(Label!="ns") %>%  filter(Label!="+")
