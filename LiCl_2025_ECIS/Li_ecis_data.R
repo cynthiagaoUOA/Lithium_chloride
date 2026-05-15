@@ -148,12 +148,12 @@ all_plot_data %>% # version excluding iffy rep1
   vascr_plot_line()  +scale_y_continuous(limits = c(0.25,1.25), expand = c(0, 0)) +theme_bw()
 
 #320pl
-all_plot_data %>% 
+midplasmin<- all_plot_data %>% 
   vascr_subset(sampleid = c(12,8,5,2)) %>% vascr_summarise(level = "summary") %>%
   vascr_plot_line() +scale_y_continuous(limits = c(0.25,1.25), expand = c(0, 0))
 
 #160pl
-all_plot_data %>% 
+lowplasmin<- all_plot_data %>% 
   vascr_subset(sampleid = c(12,9,6,3)) %>% vascr_summarise(level = "summary") %>%
   vascr_plot_line()  +scale_y_continuous(limits = c(0.25,1.25), expand = c(0, 0))
 
@@ -228,7 +228,7 @@ units<- datawextra %>%
 plotextra<- vascr_combine(resis, units)
 
 plotextra %>% 
-  vascr_subset(time = c(-2,24), sampleid = c(12, 7, 4, 1)) %>% vascr_summarise(level = "summary") %>%
+  vascr_subset(time = c(-4,24), sampleid = c(12, 7, 4, 1)) %>% vascr_summarise(level = "summary") %>%
   vascr_plot_line() +scale_y_continuous(limits = c(0.4,1.25), expand = c(0, 0))+
   scale_color_manual(values = c(
     "vehicle" = "#00A9FF", 
@@ -242,7 +242,45 @@ plotextra %>%
     "640 nM Plasmin" = "#FF0000",  
     "640 nM Plasmin + 1mM LiCl" = "#CD9600" 
   ))+theme_bw() +
-  geom_vline(xintercept=0, colour="azure4", linetype="dashed")+
+  geom_vline(xintercept=0, colour="black", linetype="dashed", alpha=0.5)+
+  geom_vline(xintercept=-2, colour="purple", linetype="dashed")+
   facet_wrap(~Unit) + ylab("Fold change")
 
 
+# supplementary concentrations
+
+lialone_resis<- all_data %>% 
+  vascr_subset(sampleid = c(12,11,10), unit= "R", frequency="4000") %>% 
+  mutate(Unit= recode(Unit, R = "Overall Resistance at 4000Hz"))
+
+lialone_units<- all_data %>% 
+  vascr_subset(sampleid = c(12,11,10), unit= c("Rb", "Alpha", "Cm")) %>% 
+  mutate(Unit= recode(Unit, Rb = "Cell-to-Cell Adhesion (Rb)", Cm= "Membrane Capacitance (Cm)", Alpha="Basolateral Adhesion (alpha)"))
+
+
+linedata_li <- data.frame(xintercept = c(-2, 0, 4, 12), Lines = c("Normalisation", "LiCl addition", "4 Hours after LiCl addition", "12 Hours after LiCl addition"),
+                        color = c("forestgreen", "black", "blue", "red"), linetype= c("dashed"), stringsAsFactors = FALSE)
+
+
+
+vascr_combine(lialone_resis, lialone_units)%>% 
+  vascr_resample_time(500) %>% 
+  vascr_normalise(-2, divide = TRUE) %>% # normalizing to 2hr before treatment. normalization by division rather than subtraction
+  vascr_subset(time = c(-5,20)) %>% 
+  vascr_summarise(level = "summary") %>%
+  vascr_plot_line() + 
+  scale_y_continuous(limits = c(0.4,1.25), expand = c(0, 0))+
+  scale_color_manual(values = c(
+    "vehicle" = "#00A9FF", 
+    "10mM LiCl" = "#FF61CC", 
+    "1mM LiCl" = "#0CB702"  
+  ))+
+  scale_fill_manual(values = c(
+    "vehicle" = "#00A9FF", 
+    "10mM LiCl" = "#ED68ED", 
+    "1mM LiCl" = "#0CB702"
+  ))+theme_bw() +
+  geom_vline(aes(xintercept = xintercept, color = Lines), linedata_li) +
+  facet_wrap(~Unit) + ylab("Fold change")
+
+## can't get good vertical line legend
