@@ -71,7 +71,7 @@ all_os_claudin_norm_points$timepoint <- factor(all_claudin_norm_points$timepoint
 all_os_claudin_summarised <- summarise_norm_overall_stain (all_os_claudin_norm_points) 
 all_os_claudin_summarised$timepoint <- factor(all_os_claudin_summarised$timepoint, levels=c("T4", "T12"))
 
-plot_bar(all_os_claudin_summarised, "mean_overall_stain", "se_overall_stain", all_os_claudin_norm_points, "norm_overall_stain")
+plot_bar(all_os_claudin_summarised, "mean_overall_stain", "se_overall_stain", all_os_claudin_norm_points, "norm_overall_stain")+ylim(0,1.75)
 
 ## zono
 norm_os_Exp2_zono<- normalise_overall_stain(quant_Exp2_zono)
@@ -84,5 +84,5 @@ all_os_zono_norm_points$timepoint <- factor(all_zono_norm_points$timepoint, leve
 all_os_zono_summarised <- summarise_norm_overall_stain (all_os_zono_norm_points) 
 all_os_zono_summarised$timepoint <- factor(all_os_zono_summarised$timepoint, levels=c("T4", "T12"))
 
-plot_bar(all_os_zono_summarised, "mean_overall_stain", "se_overall_stain", all_os_zono_norm_points, "norm_overall_stain")
+plot_bar(all_os_zono_summarised, "mean_overall_stain", "se_overall_stain", all_os_zono_norm_points, "norm_overall_stain") +ylim(0, 1.75)
 

@@ -595,8 +595,11 @@ plot_bar(all_zono_summarised, "mean_cont_area", "se_cont_area", all_zono_norm_po
 plot_bar(all_zono_summarised, "mean_cont_fluoro", "se_cont_fluoro", all_zono_norm_points, "norm_cont_fluoro")
 
 plot_bar_adjusted(all_zono_summarised, "mean_cont_area", "se_cont_area", all_zono_norm_points, "norm_cont_area")
-plot_bar_adjusted(all_zono_summarised, "mean_cont_fluoro", "se_cont_fluoro", all_zono_norm_points, "norm_cont_fluoro")
+plot_bar_adjusted(all_zono_summarised, "mean_cont_fluoro", "se_cont_fluoro", all_zono_norm_points, "norm_cont_fluoro") +ylim(0, 1.7)
 
+
+
+plot_bar(all_zono_summarised, "mean_cont_fluoro", "se_cont_fluoro", all_zono_norm_points, "norm_cont_fluoro") +ylim(0, 1.75)
 
 
 # claudin -----------------------------------------------------------------
@@ -651,7 +654,7 @@ all_claudin_summarised <- summarise_norm_data (all_claudin_norm_points)
 all_claudin_summarised$timepoint <- factor(all_claudin_summarised$timepoint, levels=c("T4", "T12"))
 
 plot_bar(all_claudin_summarised, "mean_cont_area", "se_cont_area", all_claudin_norm_points, "norm_cont_area")
-plot_bar(all_claudin_summarised, "mean_cont_fluoro", "se_cont_fluoro", all_claudin_norm_points, "norm_cont_fluoro")
+plot_bar(all_claudin_summarised, "mean_cont_fluoro", "se_cont_fluoro", all_claudin_norm_points, "norm_cont_fluoro")+ylim(0,1.75)
 
 
 # pecam -------------------------------------------------------------------
