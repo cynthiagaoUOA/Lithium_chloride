@@ -316,63 +316,7 @@ plot_bar<- function(all_summarised, y_axis, se_y_variable, all_norm_points, norm
   labs(x="", y= "", color="Replicate number")
 }
 
-###########
 
-plot_bar_adjusted<- function(all_summarised, y_axis, se_y_variable, all_norm_points, norm_y_variable){
-  all_norm_points$experiment<- recode(all_norm_points$experiment,
-                                      Exp2 = '1', Exp3 = '2', Exp4='3')
-  
-  all_summarised$sample<- recode(all_summarised$sample,
-                                 water = 'Vehicle', `Low LiCl + water` = 'Low LiCl', 
-                                 `High LiCl + water` = 'High LiCl', 
-                                 `High LiCl + plasmin` = 'High LiCl + Plasmin',
-                                 `Low LiCl + plasmin` ='Low LiCl + Plasmin') %>% as.factor() 
-  
-  all_summarised$sample<- fct_relevel(all_summarised$sample, "Vehicle", "Plasmin",
-                                      "Low LiCl", "Low LiCl + Plasmin","High LiCl",
-                                      "High LiCl + Plasmin")
-  all_norm_points$sample<- recode(all_norm_points$sample,
-                                  water = 'Vehicle', `Low LiCl + water` = 'Low LiCl', 
-                                  `High LiCl + water` = 'High LiCl', 
-                                  `High LiCl + plasmin` = 'High LiCl + Plasmin',
-                                  `Low LiCl + plasmin` ='Low LiCl + Plasmin') %>% as.factor() 
-  
-  all_norm_points$sample<- fct_relevel(all_norm_points$sample, "Vehicle", "Plasmin",
-                                       "Low LiCl", "Low LiCl + Plasmin", "High LiCl",
-                                       "High LiCl + Plasmin")
-  
-  ggplot()+
-    geom_bar(
-      data = all_summarised, 
-      mapping = aes(x=sample, y=.data[[y_axis]]), 
-      stat="identity", fill = "azure3", color="azure4")+facet_wrap(~timepoint)+
-    geom_errorbar(
-      data = all_summarised, 
-      aes(x=sample,
-          ymin=.data[[y_axis]]-.data[[se_y_variable]], 
-          ymax=.data[[y_axis]]+.data[[se_y_variable]]), 
-      width=1, color = "black"
-    )+
-    geom_point(data=all_norm_points %>% filter(experiment=="1"), 
-               mapping = aes(x=sample, y=.data[[norm_y_variable]], color=experiment), 
-               size = 0.8, position = position_nudge(x = 0.05),
-    )+
-    geom_point(data = all_norm_points %>% filter(experiment=="2"), 
-               mapping = aes(x=sample, y=.data[[norm_y_variable]], color=experiment), 
-               size = 0.8, position = position_nudge(x = -0.1),
-    )+
-    geom_point(data = all_norm_points %>% filter(experiment=="3"), 
-               mapping = aes(x=sample, y=.data[[norm_y_variable]], color=experiment), 
-               size = 0.8, position = position_nudge(x = 0.2),
-    )+
-    
-    theme_bw()+
-    scale_color_manual(values = c("1" = "blue", "2" = "red", "3" = "darkcyan"))+
-    theme(
-      axis.text.x = element_text(angle = 80, hjust = 0.5, vjust = 0.5, size=11)
-    )+ ylim(0,1.75) + 
-    labs(x="", y= "", color="Replicate number")
-}
 
 # VE-cadherin -------------------------------------------------------------
 
@@ -693,63 +637,7 @@ all_pecam_summarised <- summarise_norm_data (all_pecam_norm_points)
 all_pecam_summarised$timepoint <- factor(all_pecam_summarised$timepoint, levels=c("T4", "T12"))
 
 plot_bar_adjusted_lots(all_pecam_summarised, "mean_cont_area", "se_cont_area", all_pecam_norm_points, "norm_cont_area")
-plot_bar_adjusted_lots(all_pecam_summarised, "mean_cont_fluoro", "se_cont_fluoro", all_pecam_norm_points, "norm_cont_fluoro")
+plot_bar(all_pecam_summarised, "mean_cont_fluoro", "se_cont_fluoro", all_pecam_norm_points, "norm_cont_fluoro")+ylim(0,1.8)
 
 
-
-plot_bar_adjusted_lots<- function(all_summarised, y_axis, se_y_variable, all_norm_points, norm_y_variable){
-  all_norm_points$experiment<- recode(all_norm_points$experiment,
-                                      Exp2 = '1', Exp3 = '2', Exp4='3')
-  
-  all_summarised$sample<- recode(all_summarised$sample,
-                                 water = 'Vehicle', `Low LiCl + water` = 'Low LiCl', 
-                                 `High LiCl + water` = 'High LiCl', 
-                                 `High LiCl + plasmin` = 'High LiCl + Plasmin',
-                                 `Low LiCl + plasmin` ='Low LiCl + Plasmin') %>% as.factor() 
-  
-  all_summarised$sample<- fct_relevel(all_summarised$sample, "Vehicle", "Plasmin",
-                                      "Low LiCl", "Low LiCl + Plasmin","High LiCl",
-                                      "High LiCl + Plasmin")
-  all_norm_points$sample<- recode(all_norm_points$sample,
-                                  water = 'Vehicle', `Low LiCl + water` = 'Low LiCl', 
-                                  `High LiCl + water` = 'High LiCl', 
-                                  `High LiCl + plasmin` = 'High LiCl + Plasmin',
-                                  `Low LiCl + plasmin` ='Low LiCl + Plasmin') %>% as.factor() 
-  
-  all_norm_points$sample<- fct_relevel(all_norm_points$sample, "Vehicle", "Plasmin",
-                                       "Low LiCl", "Low LiCl + Plasmin", "High LiCl",
-                                       "High LiCl + Plasmin")
-  
-  ggplot()+
-    geom_bar(
-      data = all_summarised, 
-      mapping = aes(x=sample, y=.data[[y_axis]]), 
-      stat="identity", fill = "azure3", color="azure4")+facet_wrap(~timepoint)+
-    geom_errorbar(
-      data = all_summarised, 
-      aes(x=sample,
-          ymin=.data[[y_axis]]-.data[[se_y_variable]], 
-          ymax=.data[[y_axis]]+.data[[se_y_variable]]), 
-      width=1, color = "black"
-    )+
-    geom_point(data=all_norm_points %>% filter(experiment=="1"), 
-               mapping = aes(x=sample, y=.data[[norm_y_variable]], color=experiment), 
-               size = 0.8, position = position_nudge(x = 0.05),
-    )+
-    geom_point(data = all_norm_points %>% filter(experiment=="2"), 
-               mapping = aes(x=sample, y=.data[[norm_y_variable]], color=experiment), 
-               size = 0.8, position = position_nudge(x = -0.1),
-    )+
-    geom_point(data = all_norm_points %>% filter(experiment=="3"), 
-               mapping = aes(x=sample, y=.data[[norm_y_variable]], color=experiment), 
-               size = 0.8, position = position_nudge(x = 0.2),
-    )+
-    
-    theme_bw()+
-    scale_color_manual(values = c("1" = "blue", "2" = "red", "3" = "darkcyan"))+
-    theme(
-      axis.text.x = element_text(angle = 80, hjust = 0.5, vjust = 0.5, size=11)
-    )+ ylim(0,2) + 
-    labs(x="", y= "", color="Replicate number")
-}
 

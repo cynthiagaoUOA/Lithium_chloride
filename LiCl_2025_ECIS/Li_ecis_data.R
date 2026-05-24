@@ -147,6 +147,12 @@ all_plot_data %>% # version excluding iffy rep1
   vascr_summarise(level = "summary") %>%
   vascr_plot_line()  +scale_y_continuous(limits = c(0.25,1.25), expand = c(0, 0)) +theme_bw()
 
+hiplasmin<- all_plot_data %>% # version with rep1
+  vascr_subset(sampleid = c(12,7,4,1)) %>% vascr_summarise(level = "summary") %>%
+  vascr_plot_line()  +scale_y_continuous(limits = c(0.5,1.25), expand = c(0, 0)) +facet_wrap(~Experiment)
+
+hiplasmin
+
 #320pl
 midplasmin<- all_plot_data %>% 
   vascr_subset(sampleid = c(12,8,5,2)) %>% vascr_summarise(level = "summary") %>%
@@ -258,7 +264,7 @@ lialone_units<- all_data %>%
   mutate(Unit= recode(Unit, Rb = "Cell-to-Cell Adhesion (Rb)", Cm= "Membrane Capacitance (Cm)", Alpha="Basolateral Adhesion (alpha)"))
 
 
-linedata_li <- data.frame(xintercept = c(-2, 0, 4, 12), Lines = c("Normalisation", "LiCl addition", "4 Hours after LiCl addition", "12 Hours after LiCl addition"),
+# linedata_li <- data.frame(xintercept = c(-2, 0, 4, 12), Lines = c("Normalisation", "LiCl addition", "4 Hours after LiCl addition", "12 Hours after LiCl addition"),
                         color = c("forestgreen", "black", "blue", "red"), linetype= c("dashed"), stringsAsFactors = FALSE)
 
 
@@ -283,4 +289,238 @@ vascr_combine(lialone_resis, lialone_units)%>%
   geom_vline(aes(xintercept = xintercept, color = Lines), linedata_li) +
   facet_wrap(~Unit) + ylab("Fold change")
 
-## can't get good vertical line legend
+## can't get good vertical line legend do in ppt
+
+
+# Paper figure 1 bars -----------------------------------------------------
+
+# Timepoints 4 and 12
+barstartdata<- datawextra %>%  vascr_resample_time(500) %>% 
+  vascr_normalise(-2, divide = TRUE) %>% 
+  vascr_subset(unit="Rb", time= c(4,12), sampleid=c(1:9, 12))    # wrangled and filtered dataset 
+  
+# norm function, want fold change
+normalise <- function(dataset){
+  
+  dataset$Time <- round(dataset$Time)
+  
+  vehicle_mean <- dataset %>%
+    filter(Sample == "vehicle") %>%
+    group_by(Time) %>%
+    summarise(vehicle_mean = mean(Value), .groups = "drop")
+  
+  norm_data <- dataset %>%
+    left_join(vehicle_mean, by = "Time") %>%
+    mutate(normRb = Value / vehicle_mean)
+  
+  summarised_norm_data <- norm_data %>%
+    group_by(Sample, Time) %>%
+    summarise(
+      meanRb = mean(normRb),
+      sd = sd(normRb),
+      se = sd / sqrt(n()),
+      .groups = "drop"
+    )
+  
+  return(summarised_norm_data)
+}
+
+
+
+# Make each plasmin conc individually. Too complicated to combine. Key is just plasmin
+  
+low<- barstartdata %>% vascr_subset(unit="Rb", time= list(4,12), sampleid=c(12,9,6,3)) 
+
+normlow<- normalise(low)
+
+
+lowplot<- ggplot()+ 
+  geom_bar(
+  data = normlow,
+  aes(x=Sample, fill = Sample, y = meanRb, group=Time),
+  stat="identity", position = "dodge", width=1)+
+  scale_fill_manual(values=c(
+    "vehicle"= "#85BEDC",
+    "160 nM Plasmin" = "#3A383F",
+    "160 nM Plasmin + 1mM LiCl"="#CCBBCD",
+    "160 nM Plasmin + 10mM LiCl"= "#647588"
+  ))+
+  
+  geom_errorbar(
+    data = normlow,
+    aes(x=Sample, 
+        ymin=meanRb-se, ymax= meanRb+se))+
+  facet_wrap(~Time) +theme_bw()+ ylim(0,1.2)+
+  theme(panel.spacing = unit(0, "lines"))+
+  theme(
+    axis.text.x = element_text(angle = 80, hjust = 0.5, vjust = 0.5, size=11)
+  ) + ylab("Fold change in cell-to-cell adhesion (Rb) relative to vehicle")
+
+
+# 320
+
+mid<- barstartdata %>% vascr_subset(unit="Rb", time= list(4,12), sampleid=c(12,8,5,2)) 
+
+normmid<- normalise(mid)
+
+
+midplot<- ggplot()+ 
+  geom_bar(
+    data = normmid,
+    aes(x=Sample, fill = Sample, y = meanRb, group=Time),
+    stat="identity", position = "dodge", width=1)+
+  scale_fill_manual(values=c(
+    "vehicle"= "#85BEDC",
+    "320 nM Plasmin" = "#3A383F",
+    "320 nM Plasmin + 1mM LiCl"="#CCBBCD",
+    "320 nM Plasmin + 10mM LiCl"= "#647588"
+  ))+
+  
+  geom_errorbar(
+    data = normmid,
+    aes(x=Sample, 
+        ymin=meanRb-se, ymax= meanRb+se))+
+  facet_wrap(~Time) +theme_bw()+ ylim(0,1.2)+
+  theme(panel.spacing = unit(0, "lines"))+
+  theme(
+    axis.text.x = element_text(angle = 80, hjust = 0.5, vjust = 0.5, size=11)
+  ) + ylab("Fold change in cell-to-cell adhesion (Rb) relative to vehicle")
+
+# 640
+high<- barstartdata %>% vascr_subset(unit="Rb", time= list(4,12), sampleid=c(12,7,4,1)) 
+
+normhigh<- normalise(high)
+
+
+highplot<- ggplot()+ 
+  geom_bar(
+    data = normhigh,
+    aes(x=Sample, fill = Sample, y = meanRb, group=Time),
+    stat="identity", position = "dodge", width=0.98)+
+  scale_fill_manual(values=c(
+    "vehicle"= "skyblue1",
+    "640 nM Plasmin" = "palevioletred1",
+    "640 nM Plasmin + 1mM LiCl"="seagreen3",
+    "640 nM Plasmin + 10mM LiCl"= "sandybrown"
+  ))+
+  
+  geom_errorbar(
+    data = normhigh,
+    aes(x=Sample, 
+        ymin=meanRb-se, ymax= meanRb+se))+
+  facet_wrap(~Time) +theme_bw()+ ylim(0,1.2)+
+  theme(panel.spacing = unit(0, "lines")) +
+  ylab("Fold change in cell-to-cell adhesion (Rb) relative to vehicle")
+
+highplot
+
+
+# Combined, labels added in ppt
+lowplot+ midplot + highplot & theme(legend.position = "none") & labs(x = NULL, y = NULL)
+
+
+
+# testing colours
+
+
+vascr_combine(lialone_resis, lialone_units)%>% 
+  vascr_resample_time(500) %>% 
+  vascr_normalise(-2, divide = TRUE) %>% # normalizing to 2hr before treatment. normalization by division rather than subtraction
+  vascr_subset(time = c(-5,20)) %>% 
+  vascr_summarise(level = "summary") %>%
+  vascr_plot_line() + 
+  scale_y_continuous(limits = c(0.4,1.25), expand = c(0, 0))+
+  scale_color_manual(values = c(
+    "vehicle" = "#85BEDC", 
+    "10mM LiCl" = "#FF61CC", 
+    "1mM LiCl" = "#0CB702"  
+  ))+
+  scale_fill_manual(values = c(
+    "vehicle" = "#00A9FF", 
+    "10mM LiCl" = "#ED68ED", 
+    "1mM LiCl" = "#0CB702"
+  ))+theme_bw() +
+  facet_wrap(~Unit) + ylab("Fold change")
+
+
+
+
+# 160 and 320 conc for supp 3 ---------------------------------------------
+
+pl320<- datawextra %>%  
+  vascr_resample_time(500) %>% 
+  vascr_normalise(-2, divide = TRUE) %>% 
+  vascr_subset(unit= "Rb", time= c(-4,20), sampleid=c(12, 8, 5, 2))  %>% 
+  vascr_summarise(level = "summary") %>%
+  vascr_plot_line() +
+  scale_y_continuous(limits = c(0.4,1.25), expand = c(0, 0))+
+  scale_color_manual(values = c(
+    "vehicle" = "#00A9FF", 
+    "320 nM Plasmin + 10mM LiCl" = "#0CB702", 
+    "320 nM Plasmin" = "#FF0000", 
+    "320 nM Plasmin + 1mM LiCl" = "#E68613"  
+  ))+
+  scale_fill_manual(values = c(
+    "vehicle" = "#00B8E7", 
+    "320 nM Plasmin + 10mM LiCl" = "#00BE67", 
+    "320 nM Plasmin" = "#FF0000",  
+    "320 nM Plasmin + 1mM LiCl" = "#CD9600" 
+  ))+theme_bw() +
+  geom_vline(xintercept=0, colour="black", linetype="dashed", alpha=0.5)+
+  geom_vline(xintercept=-2, colour="purple", linetype="dashed")+
+  facet_wrap(~Unit) + ylab("Fold change")
+
+pl320
+
+pl640<- datawextra %>%  
+  vascr_resample_time(500) %>% 
+  vascr_normalise(-2, divide = TRUE) %>% 
+  vascr_subset(unit= "Rb", time= c(-4,20), sampleid=c(12,7,4,1))  %>% 
+  vascr_summarise(level = "summary") %>%
+  vascr_plot_line() +
+  scale_y_continuous(limits = c(0.4,1.25), expand = c(0, 0))+
+  scale_color_manual(values = c(
+    "vehicle" = "#00A9FF", 
+    "640 nM Plasmin + 10mM LiCl" = "#0CB702", 
+    "640 nM Plasmin" = "#FF0000", 
+    "640 nM Plasmin + 1mM LiCl" = "#E68613"  
+  ))+
+  scale_fill_manual(values = c(
+    "vehicle" = "#00B8E7", 
+    "640 nM Plasmin + 10mM LiCl" = "#00BE67", 
+    "640 nM Plasmin" = "#FF0000",  
+    "640 nM Plasmin + 1mM LiCl" = "#CD9600" 
+  ))+theme_bw() +
+  geom_vline(xintercept=0, colour="black", linetype="dashed", alpha=0.5)+
+  geom_vline(xintercept=-2, colour="purple", linetype="dashed")+
+  facet_wrap(~Unit) + ylab("Fold change")
+
+pl640
+
+pl160<- datawextra %>%  
+  vascr_resample_time(500) %>% 
+  vascr_normalise(-2, divide = TRUE) %>% 
+  vascr_subset(unit= "Rb", time= c(-4,20), sampleid=c(12,9,6,3))  %>% 
+  vascr_summarise(level = "summary") %>%
+  vascr_plot_line() +
+  scale_y_continuous(limits = c(0.4,1.25), expand = c(0, 0))+
+  scale_color_manual(values = c(
+    "vehicle" = "#00A9FF", 
+    "160 nM Plasmin + 10mM LiCl" = "#0CB702", 
+    "160 nM Plasmin" = "#FF0000", 
+    "160 nM Plasmin + 1mM LiCl" = "#E68613"  
+  ))+
+  scale_fill_manual(values = c(
+    "vehicle" = "#00B8E7", 
+    "160 nM Plasmin + 10mM LiCl" = "#00BE67", 
+    "160 nM Plasmin" = "#FF0000",  
+    "160 nM Plasmin + 1mM LiCl" = "#CD9600" 
+  ))+theme_bw() +
+  geom_vline(xintercept=0, colour="black", linetype="dashed", alpha=0.5)+
+  geom_vline(xintercept=-2, colour="purple", linetype="dashed")+
+  facet_wrap(~Unit) + ylab("Fold change")
+
+
+
+
+pl160+ pl320+ pl640 & theme(legend.position = "none") & labs( y = NULL)

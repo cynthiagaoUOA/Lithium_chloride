@@ -84,5 +84,5 @@ all_os_zono_norm_points$timepoint <- factor(all_zono_norm_points$timepoint, leve
 all_os_zono_summarised <- summarise_norm_overall_stain (all_os_zono_norm_points) 
 all_os_zono_summarised$timepoint <- factor(all_os_zono_summarised$timepoint, levels=c("T4", "T12"))
 
-plot_bar(all_os_zono_summarised, "mean_overall_stain", "se_overall_stain", all_os_zono_norm_points, "norm_overall_stain") +ylim(0, 1.75)
+plot_bar(all_os_zono_summarised, "mean_overall_stain", "se_overall_stain", all_os_zono_norm_points, "norm_overall_stain") +ylim(0, 1.8)
 

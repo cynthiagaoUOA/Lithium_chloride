@@ -144,7 +144,11 @@ licl_water_points_summarised<- licl_water_points %>%
     se_cont_area = sd_cont_area / sqrt(n()),
     mean_cont_fluoro = mean(contiguous_fluorescence),
     sd_cont_fluoro = sd(contiguous_fluorescence),
-    se_cont_fluoro = sd_cont_fluoro / sqrt(n()))
+    se_cont_fluoro = sd_cont_fluoro / sqrt(n()),
+    
+    mean_total = mean(overall_stain),
+    sd_total= sd(overall_stain),
+    se_total=sd_total/ sqrt(n()))
 
 ggplot(licl_water_points_summarised, aes(y=mean_cont_area, x=name_antibody, fill=sample))+
   geom_bar(stat = "identity", position="dodge" )+
@@ -154,7 +158,7 @@ ggplot(licl_water_points_summarised, aes(y=mean_cont_area, x=name_antibody, fill
     aes(group=sample,
         ymin=mean_cont_area-se_cont_area, 
         ymax=mean_cont_area+se_cont_area), 
-    width=0.2, color = "black", position=position_dodge(width=0.9)
+    width=0.2, color = "black", position=position_dodge(width=1)
   )+ theme_bw()+
   scale_fill_manual(values = c("Vehicle" = "#CABEE9", "Low LiCl"= "#7C7189", "High LiCl" = "#BC8E7D"))+
   theme(
@@ -172,10 +176,28 @@ ggplot(licl_water_points_summarised, aes(y=mean_cont_fluoro, x=name_antibody, fi
     aes(group=sample,
         ymin=mean_cont_fluoro-se_cont_fluoro, 
         ymax=mean_cont_fluoro+se_cont_fluoro), 
-    width=0.2, color = "black", position=position_dodge(width=0.9)
+    width=0.4, color = "black", position=position_dodge(width=0.9)
   )+ theme_bw()+
-  scale_fill_manual(values = c("Vehicle" = "#CABEE9", "Low LiCl"= "#7C7189", "High LiCl" = "#BC8E7D"))+
+  scale_fill_manual(values = c("Vehicle" = "#85BEDC", "Low LiCl"= "#647588", "High LiCl" = "#CCBBCD"))+
   theme(
     axis.text.x = element_text(angle = 80, hjust = 0.5, vjust = 0.5, size=13)
-  ) + ylim(0, 8500)+
+  ) + ylim(0, 8500)+  theme(panel.spacing = unit(0, "lines")) +
   labs(x="", y= "Fluorescence intensity of junctional area pixels", color="Replicate number", fill = "Treatment")
+
+
+ggplot(licl_water_points_summarised, aes(y=mean_total, x=name_antibody, fill=sample))+
+  geom_bar(stat = "identity", position="dodge" )+
+  facet_wrap(~timepoint)+
+  geom_errorbar(
+    data = licl_water_points_summarised, 
+    aes(group=sample,
+        ymin=mean_total-se_total, 
+        ymax=mean_total+se_total), 
+    width=0.4, color = "black", position=position_dodge(width=1)
+  )+ theme_bw()+
+  scale_fill_manual(values = c("Vehicle" = "#85BEDC", "Low LiCl"= "#647588", "High LiCl" = "#CCBBCD"))+
+  theme(
+    axis.text.x = element_text(angle = 80, hjust = 0.5, vjust = 0.5, size=13)
+  ) +  theme(panel.spacing = unit(0, "lines")) +
+  labs(x="", y= "Total fluorescence area of antibody stain (px)", color="Replicate number", fill = "Treatment")
+

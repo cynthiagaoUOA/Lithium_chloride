@@ -122,6 +122,8 @@ significance(quant_Exp2_bcat, quant_Exp3_bcat, quant_Exp4_bcat, "T12", "contiguo
 
 
 
+
+
 # Checking against JH anova  ----------------------------------------------
 
 #In theory both analysis types will produce the same outcomes, but want to check as better to simplify methods for paper
