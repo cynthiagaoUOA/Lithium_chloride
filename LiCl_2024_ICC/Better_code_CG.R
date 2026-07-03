@@ -242,7 +242,8 @@ normalise_to_water <- function(dataset){
            norm_cont_fluoro = contiguous_fluorescence/water_T12$mean_cont_fluoro) 
   
   Combined_norm_data <- rbind(T4_normalised, T12_normalised) 
-  return(Combined_norm_data)
+  return(Combined_norm_data) # replace timepoints with run. Each run has own 'mean static' 
+  # replace 'water' with 'static' as this is normalising to
 }
 
 # second function - gets means and sd
