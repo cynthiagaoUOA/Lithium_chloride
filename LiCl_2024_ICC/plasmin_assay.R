@@ -136,7 +136,9 @@ ggplot(plot,
        aes(x=time_hours, y = mean, group= treatment, colour= treatment))+ geom_line() + 
   geom_ribbon(
     data= plot, 
-    aes(x= time_hours, ymin= mean-se_fluoro, ymax= mean+se_fluoro, fill=treatment), alpha= 0.2, colour= NA) + theme_bw()
+    aes(x= time_hours, ymin= mean-se_fluoro, ymax= mean+se_fluoro, fill=treatment), alpha= 0.2, colour= NA) + 
+  theme_bw()+
+  scale_y_continuous(labels=scales::comma)
 
 
 aov(data= plot, mean ~ treatment)

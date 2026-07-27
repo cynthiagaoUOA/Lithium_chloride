@@ -3,20 +3,20 @@
 ### Stats stuff --------------------------------------------------------------------
 
 
-#all plot data is subset Rb, resample time, time normalised, and subsetted (between -4 and 20 hours)
+#data is subset Rb, resample time, time normalised, and subsetted (between -4 and 20 hours)
 
-stats_data<- all_data %>% 
-  vascr_subset(unit = "Rb") %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
-  vascr_resample_time(500) %>% 
-  vascr_subset(time = c(-5,20), sampleid=c(1:12)) #
+# stats_data<- datawextra %>% 
+#   vascr_subset(unit = "Rb") %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
+#   vascr_resample_time(500) %>% 
+#   vascr_subset(time = c(-5,20), sampleid=c(1:12)) #
+# 
+# 
+# stats_data %>% vascr_plot_anova(unit = "Rb", frequency = "0", time = 4)
+# 
+# ?vascr_plot_anova
+library(tidyverse)
 
-
-stats_data %>% vascr_plot_anova(unit = "Rb", frequency = "0", time = 4)
-
-?vascr_plot_anova
-
-
-statsdatatest<- datawextra %>% 
+statsdatatest<- datawextra %>% # time zeroed, but not normalised
   vascr_subset(unit = "Rb") %>% 
   vascr_resample_time(500) %>% 
   vascr_subset(sampleid=c(1,4,7,12), time = c(-5,20))
@@ -42,13 +42,18 @@ li_stats_data %>% # vascr_subset(sampleid=c(100, 17)) %>%
 
 #do I need to correct for multiple comparisons
 
+stats_data<- datawextra %>% # no norm
+  vascr_subset(unit = "Rb") %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
+  vascr_resample_time(500) %>%
+  vascr_subset(time = c(-5,20), sampleid=c(1:12))
 
 stats_data$Experiment <- factor(stats_data$Experiment)
 stats_data$Sample   <- factor(stats_data$Sample)
 
 
 # vascrline dunnet shows normalised lines, but performs the statistical analysis on the unnormlised data. Looks cleaner and is valid
-stats_data %>%  vascr_subset(sampleid=c(100, 17)) %>% vascr:::vascr_plot_line_dunnett (unit = "Rb", frequency = "0", time = list(4,24,20), reference = "vehicle", normtime=-2) +
+
+#stats_data %>%  vascr_subset(sampleid=c(100, 17)) %>% vascr:::vascr_plot_line_dunnett (unit = "Rb", frequency = "0", time = list(4,24,20), reference = "vehicle", normtime=-2) +
   xlim(-4,40) +ylim(-1,0.5)
 
 
@@ -60,18 +65,19 @@ sigdunnet <- dunnett %>% filter(Label!="ns") %>%  filter(Label!="+")
 sigdunnet
 
 
-# No to Dunnets, compare everything to each other
+# No to Dunnets, compare everything to each other (no reference when looking at plasmin and li alone fig 1)
 #li_stats_data %>% aov(Value~ Experiment + Sample)
 
 #vascr_plot_anova(all_data, unit = "Rb", frequency= 0, time=list(4,12))
 
 
-fourhr_li_stats_data <- all_data %>% 
+fourhr_li_stats_data <- datawextra %>% 
   vascr_subset(unit = "Rb") %>% #only looking at Rb atm. Need to repeat code from here for alpha, Cm, etc
   vascr_resample_time(500) %>% 
   vascr_subset(sampleid=c(1:12),time=4)
 
-
+library(lme4)
+library(emmeans)
 
 four <- lmer(Value ~ Sample + (1|Experiment), data = fourhr_li_stats_data)
 summary(four)
@@ -122,12 +128,12 @@ library(lme4)
 
 
 
-significance <- function (replicate1, replicate2, replicate3, timepoint, variable){
-  combine_data <- rbind(replicate1, replicate2, replicate3) %>% filter(timepoint==!!timepoint)
-  combine_data$sample <- as.factor(combine_data$sample)
-  
-  formula_str <- paste(variable, "~ sample + (1|experiment)") 
-  model <- lmer(as.formula(formula_str), data = combine_data)
-  em<- emmeans(model, specs = "sample")
-  
-  return(pairs(em, adjust = "tukey"))
+# Significance <- function (replicate1, replicate2, replicate3, timepoint, variable){
+  # combine_data <- rbind(replicate1, replicate2, replicate3) %>% filter(timepoint==!!timepoint)
+  # combine_data$sample <- as.factor(combine_data$sample)
+  # 
+  # formula_str <- paste(variable, "~ sample + (1|experiment)") 
+  # model <- lmer(as.formula(formula_str), data = combine_data)
+  # em<- emmeans(model, specs = "sample")
+  # 
+  # return(pairs(em, adjust = "tukey"))

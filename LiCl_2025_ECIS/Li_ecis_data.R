@@ -253,6 +253,8 @@ plotextra %>%
   facet_wrap(~Unit) + ylab("Fold change")
 
 
+
+
 # supplementary concentrations
 
 lialone_resis<- all_data %>% 
@@ -265,7 +267,7 @@ lialone_units<- all_data %>%
 
 
 # linedata_li <- data.frame(xintercept = c(-2, 0, 4, 12), Lines = c("Normalisation", "LiCl addition", "4 Hours after LiCl addition", "12 Hours after LiCl addition"),
-                        color = c("forestgreen", "black", "blue", "red"), linetype= c("dashed"), stringsAsFactors = FALSE)
+#                        color = c("forestgreen", "black", "blue", "red"), linetype= c("dashed"), stringsAsFactors = FALSE)
 
 
 
@@ -294,49 +296,73 @@ vascr_combine(lialone_resis, lialone_units)%>%
 
 # Paper figure 1 bars -----------------------------------------------------
 
+
+
 # Timepoints 4 and 12
 barstartdata<- datawextra %>%  vascr_resample_time(500) %>% 
   vascr_normalise(-2, divide = TRUE) %>% 
-  vascr_subset(unit="Rb", time= c(4,12), sampleid=c(1:9, 12))    # wrangled and filtered dataset 
+  vascr_subset(unit="Rb", time= c(4,12), sampleid=c(1:9, 12)) # wrangled and filtered dataset 
   
-# norm function, want fold change
-normalise <- function(dataset){
+# norm function, want fold change -------------
+
+# realised normalising to water at each timepoint rather than self at the -2 timepoint
+# normalise <- function(dataset){
+# 
+#   dataset$Time <- round(dataset$Time)
+# 
+#   vehicle_mean <- dataset %>% 
+#     filter(Sample == "vehicle") %>%
+#     group_by(Time) %>%
+#     summarise(vehicle_mean = mean(Value), .groups = "drop")
+# 
+#   norm_data <- dataset %>%
+#     left_join(vehicle_mean, by = "Time") %>%
+#     mutate(normRb = Value / vehicle_mean)
+# 
+#   summarised_norm_data <- norm_data %>%
+#     group_by(Sample, Time) %>%
+#     summarise(
+#       meanRb = mean(normRb),
+#       sd = sd(normRb),
+#       se = sd / sqrt(n()),
+#       .groups = "drop"
+#     )
+# 
+#   return(summarised_norm_data)
+# }
+
+# V2, normalising to self at -2 ----------------------------
+
+normalisebars<- function(dataset) {
+  dataset$Time<- round(dataset$Time)
   
-  dataset$Time <- round(dataset$Time)
   
-  vehicle_mean <- dataset %>%
-    filter(Sample == "vehicle") %>%
-    group_by(Time) %>%
-    summarise(vehicle_mean = mean(Value), .groups = "drop")
   
-  norm_data <- dataset %>%
-    left_join(vehicle_mean, by = "Time") %>%
-    mutate(normRb = Value / vehicle_mean)
   
-  summarised_norm_data <- norm_data %>%
-    group_by(Sample, Time) %>%
-    summarise(
-      meanRb = mean(normRb),
-      sd = sd(normRb),
-      se = sd / sqrt(n()),
-      .groups = "drop"
-    )
-  
-  return(summarised_norm_data)
 }
+
 
 
 
 # Make each plasmin conc individually. Too complicated to combine. Key is just plasmin
   
-low<- barstartdata %>% vascr_subset(unit="Rb", time= list(4,12), sampleid=c(12,9,6,3)) 
+low<- barstartdata %>% vascr_subset(time= list(4,12), sampleid=c(12,9,6,3)) 
 
-normlow<- normalise(low)
+
+lowhbardata<- low %>%
+  group_by(Sample, Time) %>%
+  summarise(
+    meanRb = mean(Value),
+    sd = sd(Value),
+    se = sd / sqrt(n())
+  )
+
+#normlow<- normalise(low)
 
 
 lowplot<- ggplot()+ 
   geom_bar(
-  data = normlow,
+  data = lowhbardata,
   aes(x=Sample, fill = Sample, y = meanRb, group=Time),
   stat="identity", position = "dodge", width=1)+
   scale_fill_manual(values=c(
@@ -345,28 +371,31 @@ lowplot<- ggplot()+
     "160 nM Plasmin + 1mM LiCl"="#CCBBCD",
     "160 nM Plasmin + 10mM LiCl"= "#647588"
   ))+
-  
   geom_errorbar(
-    data = normlow,
+    data = lowhbardata,
     aes(x=Sample, 
         ymin=meanRb-se, ymax= meanRb+se))+
   facet_wrap(~Time) +theme_bw()+ ylim(0,1.2)+
-  theme(panel.spacing = unit(0, "lines"))+
-  theme(
-    axis.text.x = element_text(angle = 80, hjust = 0.5, vjust = 0.5, size=11)
-  ) + ylab("Fold change in cell-to-cell adhesion (Rb) relative to vehicle")
+  theme(panel.spacing = unit(0, "lines"))# +
+  # theme(
+  #   axis.text.x = element_text(angle = 80, hjust = 0.5, vjust = 0.5, size=11)
+  # ) + ylab("Fold change in cell-to-cell adhesion (Rb) relative to vehicle")
 
 
 # 320
+mid<- barstartdata %>% vascr_subset(time= list(4,12), sampleid=c(12,8,5,2)) 
 
-mid<- barstartdata %>% vascr_subset(unit="Rb", time= list(4,12), sampleid=c(12,8,5,2)) 
-
-normmid<- normalise(mid)
-
+midhbardata<- mid %>%
+  group_by(Sample, Time) %>%
+  summarise(
+    meanRb = mean(Value),
+    sd = sd(Value),
+    se = sd / sqrt(n())
+  )
 
 midplot<- ggplot()+ 
   geom_bar(
-    data = normmid,
+    data = midhbardata,
     aes(x=Sample, fill = Sample, y = meanRb, group=Time),
     stat="identity", position = "dodge", width=1)+
   scale_fill_manual(values=c(
@@ -375,72 +404,81 @@ midplot<- ggplot()+
     "320 nM Plasmin + 1mM LiCl"="#CCBBCD",
     "320 nM Plasmin + 10mM LiCl"= "#647588"
   ))+
-  
   geom_errorbar(
-    data = normmid,
+    data = midhbardata,
     aes(x=Sample, 
         ymin=meanRb-se, ymax= meanRb+se))+
   facet_wrap(~Time) +theme_bw()+ ylim(0,1.2)+
-  theme(panel.spacing = unit(0, "lines"))+
-  theme(
-    axis.text.x = element_text(angle = 80, hjust = 0.5, vjust = 0.5, size=11)
-  ) + ylab("Fold change in cell-to-cell adhesion (Rb) relative to vehicle")
+  theme(panel.spacing = unit(0, "lines"))
 
 # 640
-high<- barstartdata %>% vascr_subset(unit="Rb", time= list(4,12), sampleid=c(12,7,4,1)) 
+high<- barstartdata %>% vascr_subset(time= list(4,12), sampleid=c(12,7,4,1)) 
 
-normhigh<- normalise(high)
+highbardata<- high %>%
+    group_by(Sample, Time) %>%
+    summarise(
+      meanRb = mean(Value),
+      sd = sd(Value),
+      se = sd / sqrt(n())
+    )
+
+
 
 
 highplot<- ggplot()+ 
   geom_bar(
-    data = normhigh,
+    data = highbardata,
     aes(x=Sample, fill = Sample, y = meanRb, group=Time),
     stat="identity", position = "dodge", width=0.98)+
   scale_fill_manual(values=c(
     "vehicle"= "skyblue1",
     "640 nM Plasmin" = "palevioletred1",
-    "640 nM Plasmin + 1mM LiCl"="seagreen3",
-    "640 nM Plasmin + 10mM LiCl"= "sandybrown"
+    "640 nM Plasmin + 1mM LiCl"="lightgoldenrod2",
+    "640 nM Plasmin + 10mM LiCl"= "seagreen3"
   ))+
-  
   geom_errorbar(
-    data = normhigh,
+    data = highbardata,
     aes(x=Sample, 
         ymin=meanRb-se, ymax= meanRb+se))+
   facet_wrap(~Time) +theme_bw()+ ylim(0,1.2)+
-  theme(panel.spacing = unit(0, "lines")) +
-  ylab("Fold change in cell-to-cell adhesion (Rb) relative to vehicle")
+  theme(panel.spacing = unit(0, "lines"))
 
 highplot
 
 
 # Combined, labels added in ppt
 lowplot+ midplot + highplot & theme(legend.position = "none") & labs(x = NULL, y = NULL)
+library(patchwork)
+
+
+(highplot+ lowplot + midplot) &
+  theme(legend.position = "none") &
+  labs(x = NULL, y = NULL)
+
 
 
 
 # testing colours
 
-
-vascr_combine(lialone_resis, lialone_units)%>% 
-  vascr_resample_time(500) %>% 
-  vascr_normalise(-2, divide = TRUE) %>% # normalizing to 2hr before treatment. normalization by division rather than subtraction
-  vascr_subset(time = c(-5,20)) %>% 
-  vascr_summarise(level = "summary") %>%
-  vascr_plot_line() + 
-  scale_y_continuous(limits = c(0.4,1.25), expand = c(0, 0))+
-  scale_color_manual(values = c(
-    "vehicle" = "#85BEDC", 
-    "10mM LiCl" = "#FF61CC", 
-    "1mM LiCl" = "#0CB702"  
-  ))+
-  scale_fill_manual(values = c(
-    "vehicle" = "#00A9FF", 
-    "10mM LiCl" = "#ED68ED", 
-    "1mM LiCl" = "#0CB702"
-  ))+theme_bw() +
-  facet_wrap(~Unit) + ylab("Fold change")
+# 
+# vascr_combine(lialone_resis, lialone_units)%>% 
+#   vascr_resample_time(500) %>% 
+#   vascr_normalise(-2, divide = TRUE) %>% # normalizing to 2hr before treatment. normalization by division rather than subtraction
+#   vascr_subset(time = c(-5,20)) %>% 
+#   vascr_summarise(level = "summary") %>%
+#   vascr_plot_line() + 
+#   scale_y_continuous(limits = c(0.4,1.25), expand = c(0, 0))+
+#   scale_color_manual(values = c(
+#     "vehicle" = "#85BEDC", 
+#     "10mM LiCl" = "#FF61CC", 
+#     "1mM LiCl" = "#0CB702"  
+#   ))+
+#   scale_fill_manual(values = c(
+#     "vehicle" = "#00A9FF", 
+#     "10mM LiCl" = "#ED68ED", 
+#     "1mM LiCl" = "#0CB702"
+#   ))+theme_bw() +
+#   facet_wrap(~Unit) + ylab("Fold change")
 
 
 
