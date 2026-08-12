@@ -1,10 +1,10 @@
 # data <- rbind(quant_Exp2_ve_cad, quant_Exp3_ve_cad, quant_Exp4_ve_cad)
 
-T4_VE<- data %>% filter(timepoint=="T4")
-T4_VE$sample<- as.factor(T4_VE$sample)
-
-model <- lmer(contiguous_area ~ sample + (1|experiment), data = T4_VE)
-summary(model)
+# T4_VE<- data %>% filter(timepoint=="T4")
+# T4_VE$sample<- as.factor(T4_VE$sample)
+# 
+# model <- lmer(contiguous_area ~ sample + (1|experiment), data = T4_VE)
+# summary(model)
 
 library(emmeans)
 library(lme4)
