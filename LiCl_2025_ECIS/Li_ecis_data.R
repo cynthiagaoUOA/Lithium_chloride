@@ -172,7 +172,8 @@ all_plot_data %>%
 #plasmin alone
 all_plot_data %>% 
   vascr_subset(sampleid = c(12,9,8,7)) %>% vascr_summarise(level = "summary") %>%
-  vascr_plot_line() +scale_y_continuous(limits = c(0.25,1.25), expand = c(0, 0))
+  vascr_plot_line() +scale_y_continuous(limits = c(0.25,1.25), expand = c(0, 0)) +theme_bw() + geom_vline(xintercept=0, linetype = "dashed", colour= 
+                                                                                                          "darkgrey")
 
 
 
