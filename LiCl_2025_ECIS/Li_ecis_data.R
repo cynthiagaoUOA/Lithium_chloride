@@ -140,7 +140,8 @@ all_plot_data %>%
 #640pl plasmin w Li
 all_plot_data %>% # version with rep1
   vascr_subset(sampleid = c(12,7,4,1)) %>% vascr_summarise(level = "experiment") %>%
-  vascr_plot_line()  +scale_y_continuous(limits = c(0.5,1.25), expand = c(0, 0)) +facet_wrap(~Experiment)
+  vascr_plot_line()  +scale_y_continuous(limits = c(0.5,1.25), expand = c(0, 0)) 
+
 
 all_plot_data %>% # version excluding iffy rep1
   vascr_subset(experiment=c(2,3,4),sampleid = c(12,7,4,1)) %>%

@@ -3,6 +3,8 @@
 
 library(tidyverse)
 library(BiocManager)
+
+#install.packages("EBImage")
 library(EBImage)
 library(tools)
 library(data.table)
